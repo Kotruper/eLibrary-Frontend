@@ -1,8 +1,9 @@
 import { FloatingLabel } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import { postJSON } from './tools';
 import { useRef, useState } from 'react';
+import { loginUser } from '../utilities/tools';
+import useToken from '../utilities/useToken';
 
 function LoginForm() {
   const loginForm = useRef(null);
@@ -11,32 +12,28 @@ function LoginForm() {
     password:""
   };
   const [formError, setFormError] = useState(emptyErrorForm);
+  const {token, setToken} = useToken();
 
   const handleSubmit = e => {
       e.preventDefault();
-      const form = loginForm.current;
-      if(validateForm(form)){
+      const formFields = loginForm.current.elements;
+      if(validateForm(formFields)){
         console.log("Form is OK. Send request and if status is ok redirect");
-        const data = {
-          username: String(form.elements["formEmail"].value),
-          password: String(form.elements["formPass"].value),
-          grant_type: "test"
-        };
-        const response = postJSON(data,"https://authserviceforelib.azurewebsites.net/token");
-        if(response){
-          response.then((token) => {
-            if (token) {
-              alert("Login & Password are correct! Token:\n" + token);
-            }
-            else{
-              const newFormError = {
-                ...formError,
-                email: "Email or password are not correct."
-              };
-              setFormError(newFormError);
-            }
-          })
-        }
+
+        loginUser(formFields["formEmail"].value, formFields["formPass"].value).then((token) =>{
+          if (token) {
+            //alert("Login & Password are correct! Token:\n" + token);
+            setToken(token);
+            //redirect to another page (previous page?)
+          }
+          else{
+            const newFormError = {
+              ...formError,
+              email: "Email or password are not correct."
+            };
+            setFormError(newFormError);
+          }
+        })  
       }
       else{
         console.log("Form is not OK.");
@@ -48,7 +45,7 @@ function LoginForm() {
       ...formError
     };
 
-    const email = form.elements["formEmail"];
+    const email = form["formEmail"];
     if(email.validity.valid){
       newError.email="";
     }
@@ -59,7 +56,7 @@ function LoginForm() {
       newError.email="Entered text is not a proper email";
     }
 
-    const password = form.elements["formPass"];
+    const password = form["formPass"];
     if(password.validity.valid){
       newError.password="";
     }

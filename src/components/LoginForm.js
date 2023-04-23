@@ -4,6 +4,7 @@ import Form from 'react-bootstrap/Form';
 import { useRef, useState } from 'react';
 import { loginUser } from '../utilities/tools';
 import useToken from '../utilities/useToken';
+import { redirect, useNavigate } from 'react-router';
 
 function LoginForm() {
   const loginForm = useRef(null);
@@ -13,6 +14,7 @@ function LoginForm() {
   };
   const [formError, setFormError] = useState(emptyErrorForm);
   const {token, setToken} = useToken();
+  const navigate = useNavigate();
 
   const handleSubmit = e => {
       e.preventDefault();
@@ -22,16 +24,14 @@ function LoginForm() {
 
         loginUser(formFields["formEmail"].value, formFields["formPass"].value).then((token) =>{
           if (token) {
-            //alert("Login & Password are correct! Token:\n" + token);
             setToken(token);
-            //redirect to another page (previous page?)
+            navigate("/"); //redirect to another page (previous page?)
           }
           else{
-            const newFormError = {
-              ...formError,
-              email: "Email or password are not correct."
-            };
-            setFormError(newFormError);
+            setFormError((prevFormError) => ({
+              ...prevFormError,
+              email: "Email or password are not correct"
+            }));
           }
         })  
       }
@@ -40,49 +40,55 @@ function LoginForm() {
       }
   };
 
-  function validateForm(form){ //returns if form is valid, as a side effect updates form error messages
-    let newError = {
-      ...formError
-    };
-
+  function validateForm(form) {
     const email = form["formEmail"];
-    if(email.validity.valid){
-      newError.email="";
-    }
-    else if(email.validity.valueMissing){
-      newError.email="Field required";
-    }
-    else if(email.validity.patternMismatch){
-      newError.email="Entered text is not a proper email";
-    }
-
     const password = form["formPass"];
-    if(password.validity.valid){
-      newError.password="";
-    }
-    else if(password.validity.valueMissing){
-      newError.password="Field required";
-    }
+  
+    const newError = {
+      email: email.validity.valid ? "" : 
+      email.validity.valueMissing ? "Field required" : 
+      "Entered text is not a proper email",
 
+      password: password.validity.valid ? "" : "Field required"
+    };
+  
     setFormError(newError);
-    return (!newError.email && !newError.password); //TODO
+    return !newError.email && !newError.password;
+  }
+
+  function FormField({ label, controlId, type, placeholder, name, required, pattern, error }) {
+    return (
+      <FloatingLabel className="mb-3" label={label} controlId={controlId}>
+        <Form.Control type={type} placeholder={placeholder} name={name} required={required} pattern={pattern} />
+        <Form.Text className="small text-danger">
+          {error}
+        </Form.Text>
+      </FloatingLabel>
+    );
   }
   
     return (
       <Form className='mb-3' onSubmit={handleSubmit} ref={loginForm} noValidate>
-        <FloatingLabel className="mb-3" label="Email" controlId="loginEmail">
-          <Form.Control type="email" placeholder="Enter email" name='formEmail' required pattern='[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'/>
-          <Form.Text className="small text-danger">
-            {formError.email}
-          </Form.Text>
-        </FloatingLabel>
+        <FormField
+        label="Email"
+        controlId="loginEmail"
+        type="email"
+        placeholder="Enter email"
+        name="formEmail"
+        required
+        pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+        error={formError.email}
+      />
 
-        <FloatingLabel className="mb-3" label="Password" controlId="loginPassword">
-          <Form.Control type="password" placeholder="Password" name='formPass' required/>
-          <Form.Text className="text-danger small">
-            {formError.password}
-          </Form.Text>
-        </FloatingLabel>
+      <FormField
+        label="Password"
+        controlId="loginPassword"
+        type="password"
+        placeholder="Password"
+        name="formPass"
+        required
+        error={formError.password}
+      />
         <Button variant="primary" type="submit" className='float-end'>
           Submit
         </Button>

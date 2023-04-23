@@ -4,13 +4,13 @@ import LoginForm from "../components/LoginForm";
 import RegisterForm from "../components/RegisterForm";
 import { Container, Row, Col } from "react-bootstrap";
 import { Tab, Tabs } from "react-bootstrap";
-import { AuthContext } from "../utilities/AuthContext";
+//import { AuthContext } from "../utilities/AuthContext";
 import bgImage from '../public/bg.jpg';
 
 export default function LoginPage(){
 
   return(
-    <AuthContext.Provider>
+    //<AuthContext.Provider>
       <Container fluid={true} className="h-100 align-items-center d-flex justify-content-center" 
       style={{
         backgroundImage: "url("+bgImage+")",
@@ -34,6 +34,6 @@ export default function LoginPage(){
           </Col>
         </Row>
       </Container>
-    </AuthContext.Provider>
+    //</AuthContext.Provider>
   )
 }
